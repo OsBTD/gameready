@@ -758,7 +758,7 @@ function createEnemy(typeName, x, y) {
     defeated: false
   }
   if (enemy.type.type === 'fly') {
-    enemy.flyAmplitude = enemyData.flyAmplitude !== undefined ? enemyData.flyAmplitude : 20
+    enemy.flyAmplitude = enemyData.flyAmplitude !== undefined ? enemyData.flyAmplitude : 25
     enemy.flyFrequency = enemyData.flyFrequency !== undefined ? enemyData.flyFrequency : 0.002
   }
   return enemy
