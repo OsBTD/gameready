@@ -34,7 +34,7 @@ const attackhitboxOffsetX = hitboxOffsetX
 const attackhitboxOffsetY = hitboxOffsetY
 let isDefeated = false
 
-const tileSize = 16
+const tileSize = 16 
 const keysPressed = {}
 let collisions = []
 let collisionsLoaded = false
@@ -82,7 +82,11 @@ controlsLegend.textContent = `
 `
 pauseOverlay.appendChild(controlsLegend)
 gameContainer.appendChild(pauseOverlay)
-//the keys are reset to false on here be
+
+//the keys are reset to false on here
+//because on game loop when game is pause
+//we don't listen to keyup 
+//so if a key was pressed before pausing it stays active 
 function togglePause() {
   isPaused = !isPaused
   pauseOverlay.style.display = isPaused ? 'flex' : 'none'
@@ -136,9 +140,7 @@ function restartGame() {
   lastTimestamp = 0
   isPaused = false
   pauseOverlay.style.display = 'none'
-  // while (heartsContainer.firstChild) {
-  //   heartsContainer.removeChild(heartsContainer.firstChild)
-  // }
+
   heartsContainer.innerHTML = ''
   for (let i = 0; i < 3; i++) {
     const heart = document.createElement('span')
@@ -149,9 +151,6 @@ function restartGame() {
   currentStage = 0
   playerHearts = 3
   playerHealth = playerMaxHealth
-
-  const keyUI = document.getElementById('ui-key')
-  if (keyUI) keyUI.remove()
 
   updateScoreUI()
   updateHealthUI()
@@ -185,8 +184,7 @@ function worldToScreen(x, y) {
 
 const camera = document.querySelector('.camera')
 const world = document.querySelector('.world')
-const cameraWidth = 2304
-const cameraHeight = 576
+
 let cameraX = 0
 let cameraY = 0
 
@@ -194,19 +192,221 @@ function updateCamera() {
   const viewportWidth = 800
   const viewportHeight = 576
   const worldWidth = 2304
-  const targetX = playerX + (hitboxWidth / 2) - (viewportWidth / 2)
+  //target x is where the camera should be 
+  //so that the player is at the center of viewport
+  //multiplying by 0.1 slows its movement by frame
+  const targetX = playerX + (hitboxWidth / 2) - (viewportWidth / 7)
   cameraX += (targetX - cameraX) * 0.1
+  //we limit camera movement to 0 - worldwith 
   cameraX = Math.max(0, Math.min(cameraX, worldWidth))
   const stageTop = currentStage * viewportHeight
-  const stageBottom = (currentStage * viewportHeight) + viewportHeight
-  const targetY = playerY + (hitboxHeight / 2) - (viewportHeight / 2)
-  cameraY = (targetY - cameraY) * 0.3
-  cameraY = Math.max(stageTop, cameraY)
-  if ((cameraY + cameraHeight) > stageBottom) {
-    cameraY = stageBottom - cameraHeight
-  }
-
+  cameraY = stageTop
   world.style.transform = `translate(${-cameraX}px, ${-cameraY}px)`
+}
+
+
+//next we'll add touch controls 
+const touchControls = document.createElement('div')
+touchControls.className = 'touch-controls'
+Object.assign(touchControls.style, {
+  position: 'fixed',
+  bottom: '10px',
+  left: '0',
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'space-between',
+  zIndex: '100',
+  pointerEvents: 'none'
+})
+
+const movementButtons = document.createElement('div')
+movementButtons.style.display = 'flex'
+movementButtons.style.gap = '10px'
+movementButtons.style.marginLeft = '10px'
+movementButtons.style.pointerEvents = 'auto'
+
+const leftButton = document.createElement('button')
+leftButton.textContent = '←'
+leftButton.className = 'touch-button'
+Object.assign(leftButton.style, {
+  width: '60px',
+  height: '60px',
+  fontSize: '24px',
+  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+const rightButton = document.createElement('button')
+rightButton.textContent = '→'
+rightButton.className = 'touch-button'
+Object.assign(rightButton.style, {
+  width: '60px',
+  height: '60px',
+  fontSize: '24px',
+  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+movementButtons.appendChild(leftButton)
+movementButtons.appendChild(rightButton)
+
+const actionButtons = document.createElement('div')
+actionButtons.style.display = 'flex'
+actionButtons.style.flexDirection = 'column'
+actionButtons.style.alignItems = 'flex-end'
+actionButtons.style.gap = '10px'
+actionButtons.style.marginRight = '10px'
+actionButtons.style.pointerEvents = 'auto'
+
+const topRow = document.createElement('div')
+topRow.style.display = 'flex'
+topRow.style.gap = '10px'
+
+const bottomRow = document.createElement('div')
+bottomRow.style.display = 'flex'
+bottomRow.style.gap = '10px'
+
+const jumpButton = document.createElement('button')
+jumpButton.textContent = '↑'
+jumpButton.className = 'touch-button'
+Object.assign(jumpButton.style, {
+  width: '60px',
+  height: '60px',
+  fontSize: '24px',
+  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+const attack1Button = document.createElement('button')
+attack1Button.textContent = '1'
+attack1Button.className = 'touch-button'
+Object.assign(attack1Button.style, {
+  width: '60px',
+  height: '60px',
+  fontSize: '24px',
+  backgroundColor: 'rgba(255, 100, 100, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+const attack2Button = document.createElement('button')
+attack2Button.textContent = '2'
+attack2Button.className = 'touch-button'
+Object.assign(attack2Button.style, {
+  width: '60px',
+  height: '60px',
+  fontSize: '24px',
+  backgroundColor: 'rgba(255, 100, 100, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+const attack3Button = document.createElement('button')
+attack3Button.textContent = '3'
+attack3Button.className = 'touch-button'
+Object.assign(attack3Button.style, {
+  width: '60px',
+  height: '60px',
+  fontSize: '24px',
+  backgroundColor: 'rgba(255, 100, 100, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+const pauseButton = document.createElement('button')
+pauseButton.textContent = 'Pause'
+pauseButton.className = 'touch-button'
+Object.assign(pauseButton.style, {
+  width: '80px',
+  height: '60px',
+  fontSize: '18px',
+  backgroundColor: 'rgba(100, 100, 255, 0.7)',
+  border: '2px solid #000',
+  borderRadius: '10px',
+  cursor: 'pointer'
+})
+
+topRow.appendChild(jumpButton)
+topRow.appendChild(pauseButton)
+
+bottomRow.appendChild(attack1Button)
+bottomRow.appendChild(attack2Button)
+bottomRow.appendChild(attack3Button)
+
+actionButtons.appendChild(topRow)
+actionButtons.appendChild(bottomRow)
+
+touchControls.appendChild(movementButtons)
+touchControls.appendChild(actionButtons)
+gameContainer.appendChild(touchControls)
+
+// Add event listeners for touch controls
+leftButton.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  keysPressed['q'] = true
+}, { passive: false })
+
+leftButton.addEventListener('touchend', (e) => {
+  e.preventDefault()
+  keysPressed['q'] = false
+}, { passive: false })
+
+rightButton.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  keysPressed['d'] = true
+}, { passive: false })
+
+rightButton.addEventListener('touchend', (e) => {
+  e.preventDefault()
+  keysPressed['d'] = false
+}, { passive: false })
+
+jumpButton.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  keysPressed['z'] = true
+}, { passive: false })
+
+jumpButton.addEventListener('touchend', (e) => {
+  e.preventDefault()
+  keysPressed['z'] = false
+}, { passive: false })
+
+attack1Button.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  if (!isAttacking) startAttack('attack1')
+}, { passive: false })
+
+attack2Button.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  if (!isAttacking) startAttack('attack2')
+}, { passive: false })
+
+attack3Button.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  if (!isAttacking) startAttack('attack3')
+}, { passive: false })
+
+pauseButton.addEventListener('touchstart', (e) => {
+  e.preventDefault()
+  togglePause()
+}, { passive: false })
+
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+if (isMobileDevice()) {
+  touchControls.style.display = 'flex'
+} else {
+  touchControls.style.display = 'none'
 }
 
 const coinSpawnData = {
@@ -266,6 +466,7 @@ function removeCoinsForStage() {
   coins = []
 }
 
+//check coin player collisions
 function drawCoins() {
   coins.forEach(coin => {
     if (coin.collected) return
@@ -485,7 +686,6 @@ function defeatPlayer(restartType) {
     if (playerState === 'ko') {
       isDefeated = false
       if (restartType === 'game') {
-        playerHearts = 3
         restartGame()
       } else {
         restartStage()
@@ -502,8 +702,8 @@ function getEnemyHitbox(enemy) {
   const type = enemy.type
   const spriteW = type.spriteWidth || 64
   const spriteH = type.spriteHeight || 64
-  const hbxW = type.hitboxWidth || spriteW * 0.7
-  const hbxH = type.hitboxHeight || spriteH * 0.9
+  const hbxW = type.hitboxWidth || spriteW
+  const hbxH = type.hitboxHeight || spriteH
   const hitboxOffsetX = (spriteW - hbxW) / 2
   const hitboxOffsetY = spriteH - hbxH
   return {
@@ -558,8 +758,8 @@ function createEnemy(typeName, x, y) {
     defeated: false
   }
   if (enemy.type.type === 'fly') {
-    enemy.flyAmplitude = enemyData.flyAmplitude !== undefined ? enemyData.flyAmplitude : (15 + Math.random() * 20)
-    enemy.flyFrequency = enemyData.flyFrequency !== undefined ? enemyData.flyFrequency : (0.002 + Math.random() * 0.0015)
+    enemy.flyAmplitude = enemyData.flyAmplitude !== undefined ? enemyData.flyAmplitude : 20
+    enemy.flyFrequency = enemyData.flyFrequency !== undefined ? enemyData.flyFrequency : 0.002
   }
   return enemy
 }
@@ -762,7 +962,7 @@ function handleHorizontalCollisions() {
 
 function updatePlayerState() {
   if (isAttacking || isHit) return
-  const isMovingHorizontally = keysPressed['q'] || keysPressed['d']
+  const isMovingHorizontally = keysPressed['q'] || keysPressed['d'] || keysPressed['Q'] || keysPressed['D']
   if (velocityY < 0) setPlayerState('jump')
   else if (velocityY > 0 && !onGround) setPlayerState('fall')
   else if (isMovingHorizontally && onGround) setPlayerState('run')
@@ -792,7 +992,6 @@ function transitionToNextStage() {
     justTransitioned = true
     spawnEnemiesForStage(currentStage)
     spawnCoinsForStage(currentStage)
-    console.log(`Transitioned to stage ${currentStage}`)
   } else if (currentStage == stageStarts.length - 1) {
     removeEnemiesForStage(currentStage)
     justTransitioned = true
@@ -846,7 +1045,6 @@ function spawnEnemiesForStage(stage) {
       enemies.push(enemy)
       spawnData.active = true
       spawnData.enemyRef = enemy
-      console.log(`Spawned ${spawnData.type} at x:${spawnData.x}, y:${spawnData.y} for stage ${stage}`)
     }
   })
 }
@@ -875,9 +1073,9 @@ function gameLoop(timestamp) {
     lastTimestamp = timestamp
     prevX = playerX
     prevY = playerY
-    if (keysPressed['q']) { playerX -= speed, facingRight = false }
-    if (keysPressed['d']) { playerX += speed, facingRight = true }
-    if ((keysPressed['z'] || keysPressed[' ']) && onGround) { velocityY = jumpStrength, onGround = false }
+    if (keysPressed['q'] || keysPressed['Q']) { playerX -= speed, facingRight = false }
+    if (keysPressed['d'] || keysPressed['D']) { playerX += speed, facingRight = true }
+    if ((keysPressed['z'] || keysPressed[' '] || keysPressed['Z']) && onGround) { velocityY = jumpStrength, onGround = false }
     if (!onGround) velocityY += gravity
     playerY += velocityY
     if (!isDefeated) {
