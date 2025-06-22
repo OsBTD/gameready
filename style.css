@@ -108,6 +108,7 @@ body {
     font-family: Arial, sans-serif;
     z-index: 10;
 }
+
 .player.idle1 {
     background-position-y: 0px;
     animation: anim_idle1 1.1s steps(22) infinite;
@@ -315,17 +316,20 @@ body {
     filter: contrast(150%) brightness(1.5);
     transition: all 0.1s;
 }
+
 .enemy-explosion {
-    width:  64px;
+    width: 64px;
     height: 64px;
     background-image: url('enemies.png');
     background-size: 1664px 384px;
-    background-position-y: -320px;     
+    background-position-y: -320px;
     animation: anim_enemy_explosion 0.8s steps(12) 1 forwards;
 }
 
 @keyframes anim_enemy_explosion {
-    to { background-position-x: -768px; }
+    to {
+        background-position-x: -768px;
+    }
 }
 
 .player-hit {
@@ -373,9 +377,26 @@ body {
     margin-right: 5px;
 }
 
-@media screen and (max-width: 700px) {
-.game-container {
-    margin-top: 0;
-    width: 90vw;
+.clock {
+    z-index: 10;
 }
+
+@media screen and (max-width: 900px) {
+    .game-container {
+        margin-top: 0;
+        width: 90vw;
+    }
+}
+@media screen and (max-width: 1200px) {
+
+    .clock {
+        margin-top: 5vh;
+    }
+}
+
+@media screen and (max-width: 550px) {
+
+    .clock {
+        margin-top: 9vh;
+    }
 }

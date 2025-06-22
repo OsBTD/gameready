@@ -30,11 +30,10 @@ const attackHitboxWidth = 50
 const attackHitboxHeight = hitboxHeight
 const hitboxOffsetX = (spriteWidth - hitboxWidth) / 2
 const hitboxOffsetY = spriteHeight - hitboxHeight
-const attackhitboxOffsetX = hitboxOffsetX
-const attackhitboxOffsetY = hitboxOffsetY
+
 let isDefeated = false
 
-const tileSize = 16 
+const tileSize = 16
 const keysPressed = {}
 let collisions = []
 let collisionsLoaded = false
@@ -48,6 +47,25 @@ const stageStarts = [
   { x: 800, y: 1157, facingRight: false },
   { x: 200, y: 1738, facingRight: false }
 ]
+
+
+//time
+let playTime = 0
+
+//clock ui 
+const clockDisplay = document.createElement('div')
+clockDisplay.className = 'clock'
+clockDisplay.textContent = 'Time: 00:00'
+Object.assign(clockDisplay.style, {
+  position: 'absolute',
+  top: '10px',
+  left: '20vw',
+  color: 'red',
+  padding: '5px',
+  fontFamily: 'Arial, sans-serif',
+  zIndex: '10'
+})
+gameContainer.appendChild(clockDisplay)
 
 let isPaused = false
 const pauseOverlay = document.createElement('div')
@@ -175,6 +193,23 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
 
 })
 
+const GameOver = document.createElement('div')
+GameOver.className = 'pause-overlay'
+GameOver.style.display = 'none'
+GameOver.innerHTML = `
+  <h1> Game Over! </h1>
+  <button id="play-again">Play Again</button>
+`
+gameContainer.appendChild(GameOver)
+document.getElementById('play-again').addEventListener('click', () => {
+  restartGame()
+  GameOver.style.display = 'none'
+  GameOver.appendChild(continueBtn)
+  GameOver.appendChild(restartStageBtn)
+  GameOver.appendChild(restartGameBtn)
+  GameOver.appendChild(controlsLegend)
+})
+
 function worldToScreen(x, y) {
   return {
     x: x - cameraX,
@@ -191,13 +226,20 @@ let cameraY = 0
 function updateCamera() {
   const viewportWidth = 800
   const viewportHeight = 576
-  const worldWidth = 2304
+  let worldWidth = 2304
   //target x is where the camera should be 
   //so that the player is at the center of viewport
   //multiplying by 0.1 slows its movement by frame
   const targetX = playerX + (hitboxWidth / 2) - (viewportWidth / 7)
+  console.log(playerX);
+
   cameraX += (targetX - cameraX) * 0.1
   //we limit camera movement to 0 - worldwith 
+  if (screen.width > 1600) {
+    worldWidth = 1088
+  } else if (screen.width > 1300 && screen.width < 1300) {
+    worldWidth = 1400
+  }
   cameraX = Math.max(0, Math.min(cameraX, worldWidth))
   const stageTop = currentStage * viewportHeight
   cameraY = stageTop
@@ -640,12 +682,15 @@ function playerTakeDamage() {
     playerHearts -= 1
     if (playerHearts <= 0) {
       playerHearts = 0
-      updateHealthUI()
-      defeatPlayer('game')
+      if (continueBtn.parentNode) continueBtn.remove()
+      if (restartStageBtn.parentNode) restartStageBtn.remove()
+      if (restartGameBtn.parentNode) restartGameBtn.remove()
+      if (controlsLegend.parentNode) controlsLegend.remove()
+      isPaused = true
+      GameOver.style.display = 'flex'
       return
     } else {
       playerHealth = playerMaxHealth
-      updateHealthUI()
     }
   }
   updateHealthUI()
@@ -758,7 +803,7 @@ function createEnemy(typeName, x, y) {
     defeated: false
   }
   if (enemy.type.type === 'fly') {
-    enemy.flyAmplitude = enemyData.flyAmplitude !== undefined ? enemyData.flyAmplitude : 25
+    enemy.flyAmplitude = enemyData.flyAmplitude !== undefined ? enemyData.flyAmplitude : 20
     enemy.flyFrequency = enemyData.flyFrequency !== undefined ? enemyData.flyFrequency : 0.002
   }
   return enemy
@@ -922,7 +967,13 @@ function handleVerticalCollisions() {
           playerHearts = Math.max(0, playerHearts - 1)
           updateHealthUI()
           if (playerHearts <= 0) {
-            defeatPlayer('game')
+            if (continueBtn.parentNode) continueBtn.remove()
+            if (restartStageBtn.parentNode) restartStageBtn.remove()
+            if (restartGameBtn.parentNode) restartGameBtn.remove()
+            if (controlsLegend.parentNode) controlsLegend.remove()
+            isPaused = true
+            GameOver.style.display = 'flex'
+            return
           } else {
             defeatPlayer('stage')
             playerHealth = playerMaxHealth
@@ -1071,6 +1122,11 @@ function gameLoop(timestamp) {
     if (lastTimestamp === 0) lastTimestamp = timestamp
     const deltaTime = timestamp - lastTimestamp
     lastTimestamp = timestamp
+    playTime += deltaTime / 1000
+    const minutes = Math.floor(playTime / 60).toString().padStart(2, '0');
+    const seconds = Math.floor(playTime % 60).toString().padStart(2, '0');
+    clockDisplay.textContent = `Time: ${minutes}:${seconds}`;
+
     prevX = playerX
     prevY = playerY
     if (keysPressed['q'] || keysPressed['Q']) { playerX -= speed, facingRight = false }
