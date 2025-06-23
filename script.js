@@ -237,7 +237,7 @@ function updateCamera() {
   //we limit camera movement to 0 - worldwith 
   if (screen.width > 1600) {
     worldWidth = 1088
-  } else if (screen.width > 1300 && screen.width < 1300) {
+  } else if (screen.width > 1300 && screen.width < 1600) {
     worldWidth = 1400
   }
   cameraX = Math.max(0, Math.min(cameraX, worldWidth))
